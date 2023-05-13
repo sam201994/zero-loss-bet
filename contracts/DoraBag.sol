@@ -111,23 +111,23 @@ contract DoraBag is Ownable {
     );
     event FundsWithdrawn(address indexed user, uint256 amount);
 
-    // /**
-    //  * @dev Constructor function that initializes the contract with the necessary addresses and contracts.
-    //  * @param _BTC_USD_FEED_ADDRESS The address of the BTC/USD price feed.
-    //  * @param _LENDING_POOL_PROVIDER_ADDRESS The address of the Aave V2 lending pool addresses provider.
-    //  * @param _AAVE_V2_ADDRESS The address of the Aave V2 protocol contract.
-    //  * @param _AAVE_ATOKEN_ADDRESS The address of the Aave aToken contract.
-    //  */
+    /**
+     * @dev Constructor function that initializes the contract with the necessary addresses and contracts.
+     * @param _BTC_USD_FEED_ADDRESS The address of the BTC/USD price feed.
+     * @param _LENDING_POOL_PROVIDER_ADDRESS The address of the Aave V2 lending pool addresses provider.
+     * @param _AAVE_V2_ADDRESS The address of the Aave V2 protocol contract.
+     * @param _AAVE_ATOKEN_ADDRESS The address of the Aave aToken contract.
+     */
     constructor(
-        // address _BTC_USD_FEED_ADDRESS,
-        // address _LENDING_POOL_PROVIDER_ADDRESS,
-        // address _AAVE_V2_ADDRESS,
-        // address _AAVE_ATOKEN_ADDRESS
+        address _BTC_USD_FEED_ADDRESS,
+        address _LENDING_POOL_PROVIDER_ADDRESS,
+        address _AAVE_V2_ADDRESS,
+        address _AAVE_ATOKEN_ADDRESS
     ) {
-        address _BTC_USD_FEED_ADDRESS = address(0xA39434A63A52E749F02807ae27335515BA4b07F7);
-        address _LENDING_POOL_PROVIDER_ADDRESS = address(0x5E52dEc931FFb32f609681B8438A51c675cc232d);
-        address _AAVE_V2_ADDRESS = address(0x3bd3a20Ac9Ff1dda1D99C0dFCE6D65C4960B3627);
-        address _AAVE_ATOKEN_ADDRESS = address(0x22404B0e2a7067068AcdaDd8f9D586F834cCe2c5);
+        // address _BTC_USD_FEED_ADDRESS = address(0xA39434A63A52E749F02807ae27335515BA4b07F7);
+        // address _LENDING_POOL_PROVIDER_ADDRESS = address(0x5E52dEc931FFb32f609681B8438A51c675cc232d);
+        // address _AAVE_V2_ADDRESS = address(0x3bd3a20Ac9Ff1dda1D99C0dFCE6D65C4960B3627);
+        // address _AAVE_ATOKEN_ADDRESS = address(0x22404B0e2a7067068AcdaDd8f9D586F834cCe2c5);
 
         DoraToken doraToken = new DoraToken();
         doraAddress = address(doraToken);
