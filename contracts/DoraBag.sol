@@ -203,7 +203,7 @@ contract DoraBag is Ownable {
         // uint256 interest = aaveBalanceOfMyContract - totalSupplyOfDoraToken;
 
         // harcoded interest for now, remove later
-        uint256 interest = 1 ether;
+        uint256 interest = 5 ether;
 
         // Mint the equivalent amount of receipt tokens to the caller
         if (interest > 0 && closestUser != address(0)) {
@@ -300,7 +300,7 @@ contract DoraBag is Ownable {
     function isSufficientBalance(address account) private view returns (bool) {
         IDoraToken dora = IDoraToken(doraAddress);
         uint256 balance = dora.balanceOf(account);
-        return balance > 1 ether;
+        return balance > MIN_STAKE;
     }
 
     /**
@@ -335,6 +335,12 @@ contract DoraBag is Ownable {
     function getBettingRoundsLength() public view returns (uint256) {
         return bettingRounds.length;
     }
+
+    function getDoraTokenAddress() external view returns (address) {
+        return doraAddress;
+    }
+
+    receive() external payable {}
     /**
      * @dev Retrieves the total supply and the balance of the Aave aToken.
      * Returns a tuple with the total supply and the balance of the aToken in the contract.
