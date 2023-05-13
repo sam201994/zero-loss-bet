@@ -23,6 +23,17 @@ async function main() {
 
   await doraBag.deployed();
 
+
+   // Call the startBetting function
+  await doraBag.startBetting();
+  console.log('startBetting called');
+
+
+  // // Call the stopBetting function
+  // await doraBag.stopBetting();
+  // console.log('stopBetting called');
+
+
   console.log("DoraBag deployed to:", doraBag.address);
 }
 

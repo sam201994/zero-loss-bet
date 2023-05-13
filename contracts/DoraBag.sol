@@ -48,24 +48,24 @@ contract DoraBag is Ownable {
     BettingRound[] public bettingRounds;
     mapping(address => uint256) bets;
     address[] public users;
-    uint256 currentround = 0;
     address doraAddress;
 
     // Modifiers
     modifier isCurrentRoundOpen() {
         require(
-            bettingRounds[getCurrentRoundIndex()].isOpen,
+            (bettingRounds.length > 0 &&
+            bettingRounds[getCurrentRoundIndex()].isOpen),
             "Betting is closed"
         );
         _;
     }
 
     modifier isCurrentRoundClosed() {
-        require(
-            (bettingRounds.length == 0 ||
-                bettingRounds[getCurrentRoundIndex()].isOpen == false),
-            "Betting is open"
-        );
+        if(bettingRounds.length > 0) {
+           if(bettingRounds[getCurrentRoundIndex()].isOpen) {
+               revert("Previous betting round is open");
+           }
+        }
         _;
     }
 
@@ -91,7 +91,7 @@ contract DoraBag is Ownable {
     }
 
     modifier isBettingRoundEmpty() {
-        require(bettingRounds.length != 0, "No betting round there");
+        require(bettingRounds.length > 0, "No betting round there");
         _;
     }
 
@@ -111,23 +111,23 @@ contract DoraBag is Ownable {
     );
     event FundsWithdrawn(address indexed user, uint256 amount);
 
-    /**
-     * @dev Constructor function that initializes the contract with the necessary addresses and contracts.
-     * @param _BTC_USD_FEED_ADDRESS The address of the BTC/USD price feed.
-     * @param _LENDING_POOL_PROVIDER_ADDRESS The address of the Aave V2 lending pool addresses provider.
-     * @param _AAVE_V2_ADDRESS The address of the Aave V2 protocol contract.
-     * @param _AAVE_ATOKEN_ADDRESS The address of the Aave aToken contract.
-     */
+    // /**
+    //  * @dev Constructor function that initializes the contract with the necessary addresses and contracts.
+    //  * @param _BTC_USD_FEED_ADDRESS The address of the BTC/USD price feed.
+    //  * @param _LENDING_POOL_PROVIDER_ADDRESS The address of the Aave V2 lending pool addresses provider.
+    //  * @param _AAVE_V2_ADDRESS The address of the Aave V2 protocol contract.
+    //  * @param _AAVE_ATOKEN_ADDRESS The address of the Aave aToken contract.
+    //  */
     constructor(
-        address _BTC_USD_FEED_ADDRESS,
-        address _LENDING_POOL_PROVIDER_ADDRESS,
-        address _AAVE_V2_ADDRESS,
-        address _AAVE_ATOKEN_ADDRESS
+        // address _BTC_USD_FEED_ADDRESS,
+        // address _LENDING_POOL_PROVIDER_ADDRESS,
+        // address _AAVE_V2_ADDRESS,
+        // address _AAVE_ATOKEN_ADDRESS
     ) {
-        // address _BTC_USD_FEED_ADDRESS = address(0xA39434A63A52E749F02807ae27335515BA4b07F7);
-        // address _LENDING_POOL_PROVIDER_ADDRESS = address(0x5E52dEc931FFb32f609681B8438A51c675cc232d);
-        // address _AAVE_V2_ADDRESS = address(0x3bd3a20Ac9Ff1dda1D99C0dFCE6D65C4960B3627);
-        // address _AAVE_ATOKEN_ADDRESS = address(0x22404B0e2a7067068AcdaDd8f9D586F834cCe2c5);
+        address _BTC_USD_FEED_ADDRESS = address(0xA39434A63A52E749F02807ae27335515BA4b07F7);
+        address _LENDING_POOL_PROVIDER_ADDRESS = address(0x5E52dEc931FFb32f609681B8438A51c675cc232d);
+        address _AAVE_V2_ADDRESS = address(0x3bd3a20Ac9Ff1dda1D99C0dFCE6D65C4960B3627);
+        address _AAVE_ATOKEN_ADDRESS = address(0x22404B0e2a7067068AcdaDd8f9D586F834cCe2c5);
 
         DoraToken doraToken = new DoraToken();
         doraAddress = address(doraToken);
@@ -146,13 +146,13 @@ contract DoraBag is Ownable {
     /**
      * @dev Starts a new betting round. Only the contract owner can call this function.
      */
+     
     function startBetting() external onlyOwner isCurrentRoundClosed {
-        currentround = currentround + 1;
         uint256 timestamp = block.timestamp;
         bettingRounds.push(
-            BettingRound(currentround, address(0), true, timestamp)
+            BettingRound(bettingRounds.length + 1, address(0), true, timestamp)
         );
-        emit BettingRoundStarted(currentround, timestamp);
+        emit BettingRoundStarted(bettingRounds.length + 1, timestamp);
     }
 
     /**
@@ -166,7 +166,7 @@ contract DoraBag is Ownable {
         hasBettingTimeExpired
     {
         bettingRounds[getCurrentRoundIndex()].isOpen = false;
-        emit BettingRoundClosed(currentround);
+        emit BettingRoundClosed(bettingRounds.length);
     }
 
     /**
@@ -207,7 +207,7 @@ contract DoraBag is Ownable {
         if (interest > 0 && closestUser != address(0)) {
             mintDoraToken(closestUser, interest);
         }
-        emit WinnerAnnounced(currentround, closestUser, interest);
+        emit WinnerAnnounced(bettingRounds.length, closestUser, interest);
     }
 
     /**
@@ -319,7 +319,7 @@ contract DoraBag is Ownable {
      * @return The index of the current betting round.
      */
     function getCurrentRoundIndex() private view returns (uint256) {
-        return currentround == 0 ? 0 : currentround - 1;
+        return bettingRounds.length - 1;
     }
 
     /**
