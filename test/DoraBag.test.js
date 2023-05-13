@@ -7,7 +7,7 @@ const LENDING_POOL_PROVIDER_ADDRESS =
 const AAVE_V2_ADDRESS = "0x3bd3a20Ac9Ff1dda1D99C0dFCE6D65C4960B3627"
 const AAVE_ATOKEN_ADDRESS = "0x22404B0e2a7067068AcdaDd8f9D586F834cCe2c5"
 
-describe("DoraBag", function () {
+describe("DoraBag Tests", function () {
     let deployer
     let account1
     let account2
@@ -52,6 +52,10 @@ describe("DoraBag", function () {
             await expect(
                 doraBag.connect(account1).startBetting()
             ).to.be.revertedWith("Ownable: caller is not the owner")
+            await expect(doraBag.connect(deployer).startBetting()).to.emit(
+                doraBag,
+                "BettingRoundStarted"
+            )
         })
 
         // it should revert if betting has already started
@@ -59,6 +63,22 @@ describe("DoraBag", function () {
             await doraBag.startBetting()
             await expect(doraBag.startBetting()).to.be.revertedWith(
                 "Previous betting round is open"
+            )
+        })
+    })
+
+    describe("stopBetting", function () {
+        // only owner can stop betting
+        it("should revert if not owner", async function () {
+            await expect(
+                doraBag.connect(account1).stopBetting()
+            ).to.be.revertedWith("Ownable: caller is not the owner")
+        })
+
+        // it should revert if betting has already stoped
+        it("should revert if betting has already stoped", async function () {
+            await expect(doraBag.stopBetting()).to.be.revertedWith(
+                "Betting is closed"
             )
         })
     })
