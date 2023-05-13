@@ -54,11 +54,7 @@ contract DoraBag is Ownable {
 
     // Modifiers
     modifier isCurrentRoundOpen() {
-        require(
-            (bettingRounds.length > 0 &&
-                bettingRounds[getCurrentRoundIndex()].isOpen),
-            "Betting is closed"
-        );
+        require((bettingRounds.length > 0 && bettingRounds[getCurrentRoundIndex()].isOpen), "Betting is closed");
         _;
     }
 
@@ -73,9 +69,7 @@ contract DoraBag is Ownable {
 
     modifier hasBettingTimeExpired() {
         require(
-            block.timestamp >
-                bettingRounds[getCurrentRoundIndex()].startTime +
-                    BETTING_PERIOD,
+            block.timestamp > bettingRounds[getCurrentRoundIndex()].startTime + BETTING_PERIOD,
             "Betting can't be stopped before 7 days"
         );
         _;
@@ -83,10 +77,7 @@ contract DoraBag is Ownable {
 
     modifier isLockInPeriodOver() {
         require(
-            block.timestamp >
-                bettingRounds[getCurrentRoundIndex()].startTime +
-                    BETTING_PERIOD +
-                    LOCK_IN_PERIOD,
+            block.timestamp > bettingRounds[getCurrentRoundIndex()].startTime + BETTING_PERIOD + LOCK_IN_PERIOD,
             "Bets are locked"
         );
         _;
@@ -101,16 +92,8 @@ contract DoraBag is Ownable {
     event DoraTokenDeployed(address a);
     event BettingRoundStarted(uint256 roundNumber, uint256 startTime);
     event BettingRoundClosed(uint256 roundNumber);
-    event BetPlaced(
-        address indexed user,
-        uint256 betAmount,
-        uint256 stakedAmount
-    );
-    event WinnerAnnounced(
-        uint256 roundNumber,
-        address winner,
-        uint256 interest
-    );
+    event BetPlaced(address indexed user, uint256 betAmount, uint256 stakedAmount);
+    event WinnerAnnounced(uint256 roundNumber, address winner, uint256 interest);
     event FundsWithdrawn(address indexed user, uint256 amount);
 
     /**
@@ -138,9 +121,7 @@ contract DoraBag is Ownable {
         priceFeed = AggregatorV3Interface(_BTC_USD_FEED_ADDRESS);
         iAaveV2 = IAaveV2(_AAVE_V2_ADDRESS);
         iAToken = IERC20(_AAVE_ATOKEN_ADDRESS);
-        lendingPoolAddressesProvider = ILendingPoolAddressesProvider(
-            _LENDING_POOL_PROVIDER_ADDRESS
-        );
+        lendingPoolAddressesProvider = ILendingPoolAddressesProvider(_LENDING_POOL_PROVIDER_ADDRESS);
         // LENDING_POOL_ADDRESS = getLendingPoolAddress();
         emit DoraTokenDeployed(address(doraToken));
     }
@@ -159,9 +140,7 @@ contract DoraBag is Ownable {
      */
     function startBetting() external onlyOwner isCurrentRoundClosed {
         uint256 timestamp = block.timestamp;
-        bettingRounds.push(
-            BettingRound(bettingRounds.length + 1, address(0), true, timestamp)
-        );
+        bettingRounds.push(BettingRound(bettingRounds.length + 1, address(0), true, timestamp));
         emit BettingRoundStarted(bettingRounds.length + 1, timestamp);
     }
 
@@ -169,12 +148,7 @@ contract DoraBag is Ownable {
      * @dev Stops the current betting round. Only the contract owner can call this function.
      * Betting can only be stopped after the betting period has expired.
      */
-    function stopBetting()
-        external
-        onlyOwner
-        isCurrentRoundOpen
-        hasBettingTimeExpired
-    {
+    function stopBetting() external onlyOwner isCurrentRoundOpen hasBettingTimeExpired {
         bettingRounds[getCurrentRoundIndex()].isOpen = false;
         emit BettingRoundClosed(bettingRounds.length);
     }
@@ -228,9 +202,7 @@ contract DoraBag is Ownable {
      * Emits a BetPlaced event.
      * @param _bitcoinGuesspriceInUSD The guessed Bitcoin price in USD.
      */
-    function placeBet(
-        uint256 _bitcoinGuesspriceInUSD
-    ) external payable isCurrentRoundOpen {
+    function placeBet(uint256 _bitcoinGuesspriceInUSD) external payable isCurrentRoundOpen {
         require(_bitcoinGuesspriceInUSD > 0, "Guess price cannot be 0");
 
         if (bets[msg.sender] == 0) {

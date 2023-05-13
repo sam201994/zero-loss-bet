@@ -22,8 +22,8 @@ contract AaveBalance {
 
     function getLendingPoolAddress() private view returns (address) {
         ILendingPoolAddressesProvider lendingPoolAddressesProvider = ILendingPoolAddressesProvider(
-                0x5E52dEc931FFb32f609681B8438A51c675cc232d
-            );
+            0x5E52dEc931FFb32f609681B8438A51c675cc232d
+        );
 
         return lendingPoolAddressesProvider.getLendingPool();
     }
