@@ -5,6 +5,7 @@ import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "hardhat/console.sol";
 
 import "./interfaces/IAaveV2.sol";
 import "./interfaces/IDoraToken.sol";
@@ -54,17 +55,17 @@ contract DoraBag is Ownable {
     modifier isCurrentRoundOpen() {
         require(
             (bettingRounds.length > 0 &&
-            bettingRounds[getCurrentRoundIndex()].isOpen),
+                bettingRounds[getCurrentRoundIndex()].isOpen),
             "Betting is closed"
         );
         _;
     }
 
     modifier isCurrentRoundClosed() {
-        if(bettingRounds.length > 0) {
-           if(bettingRounds[getCurrentRoundIndex()].isOpen) {
-               revert("Previous betting round is open");
-           }
+        if (bettingRounds.length > 0) {
+            if (bettingRounds[getCurrentRoundIndex()].isOpen) {
+                revert("Previous betting round is open");
+            }
         }
         _;
     }
@@ -146,7 +147,7 @@ contract DoraBag is Ownable {
     /**
      * @dev Starts a new betting round. Only the contract owner can call this function.
      */
-     
+
     function startBetting() external onlyOwner isCurrentRoundClosed {
         uint256 timestamp = block.timestamp;
         bettingRounds.push(
@@ -330,6 +331,9 @@ contract DoraBag is Ownable {
         return lendingPoolAddressesProvider.getLendingPool();
     }
 
+    function getBettingRoundsLength() public view returns (uint256) {
+        return bettingRounds.length;
+    }
     /**
      * @dev Retrieves the total supply and the balance of the Aave aToken.
      * Returns a tuple with the total supply and the balance of the aToken in the contract.
