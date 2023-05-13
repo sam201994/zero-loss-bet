@@ -274,7 +274,7 @@ contract DoraBag is Ownable {
      * @dev Retrieves the current Bitcoin price in USD from the price feed.
      * Returns the latest round data from the price feed contract.
      */
-    function getBitcoinPrice() private view returns (int256) {
+    function getBitcoinPrice() public view returns (int256) {
         (, int256 price, , , ) = priceFeed.latestRoundData();
         return price;
     }

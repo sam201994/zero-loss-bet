@@ -1,11 +1,4 @@
-// We require the Hardhat Runtime Environment explicitly here. This is optional
-// but useful for running the script in a standalone fashion through `node <script>`.
-//
-// You can also run a script with `npx hardhat run <script>`. If you do that, Hardhat
-// will compile your contracts, add the Hardhat Runtime Environment's members to the
-// global scope, and execute the script.
-const hre = require("hardhat")
-const { ethers, deployments, getNamedAccounts } = require("hardhat")
+const { ethers, network } = require("hardhat")
 
 async function main() {
     const BTC_USD_FEED_ADDRESS = "0xA39434A63A52E749F02807ae27335515BA4b07F7"
@@ -16,13 +9,12 @@ async function main() {
 
     // Retrieve the accounts
     const [deployer, account1, account2, account3, account4, account5] =
-        await hre.ethers.getSigners()
-
-    const initialEtherAmount = ethers.utils.parseEther("4")
+        await ethers.getSigners()
 
     // Compile the contract
-    const DoraBag = await hre.ethers.getContractFactory("DoraBag")
+    const DoraBag = await ethers.getContractFactory("DoraBag")
 
+    // Deploy the contract
     const doraBag = await DoraBag.deploy(
         BTC_USD_FEED_ADDRESS,
         LENDING_POOL_PROVIDER_ADDRESS,
@@ -30,134 +22,128 @@ async function main() {
         AAVE_ATOKEN_ADDRESS
     )
 
-    // // Wait for the contract to be mined
-    // // // Call to check the balance of DoraToken for all accounts
-    // doraBag.on("DoraTokenDeployed", async (doraAddress) => {
-    //     console.log("DoraToken deployed at:", doraAddress)
-    //     // Perform any desired operations with Contract B
-    //     const balance1 = await doraAddress.balanceOf(account1.address)
-    //     const balance2 = await doraAddress.balanceOf(account2.address)
-    //     const balance3 = await doraAddress.balanceOf(account3.address)
-    //     const balance4 = await doraAddress.balanceOf(account4.address)
-    //     const balance5 = await doraAddress.balanceOf(account5.address)
-
-    //     console.log("Account 1 Balance:", balance1.toString())
-    //     console.log("Account 2 Balance:", balance2.toString())
-    //     console.log("Account 3 Balance:", balance3.toString())
-    //     console.log("Account 4 Balance:", balance4.toString())
-    //     console.log("Account 5 Balance:", balance5.toString())
-    // })
-
     await doraBag.deployed()
 
-    console.log("doraBag.address", doraBag.address)
+    console.log({ DoraBagAddress: doraBag.address })
 
-    const amount = ethers.utils.parseEther("2") // 1 Ether
+    // Get the address of the DoraToken contract
+    const DoraTokenAddress = await doraBag.getDoraTokenAddress()
+    console.log({ DoraTokenAddress })
 
+    // Send 5 ETH to the contract for mocking interest, to be distributed to the winner (TODO: get this from Aave)
     await deployer.sendTransaction({
         to: ethers.utils.getAddress(doraBag.address),
-        value: amount,
+        value: ethers.utils.parseEther("5"),
     })
-    console.log("Transferred Ether from signer1 to signer2")
 
     const doraBagETHBalanceBefore = await ethers.provider.getBalance(
         doraBag.address
     )
-    console.log(
-        "ETH Balance of DoraBag before betting has started",
-        ethers.utils.formatEther(doraBagETHBalanceBefore)
-    )
+    console.log({
+        DoraBagBalance: ethers.utils.formatEther(doraBagETHBalanceBefore),
+    })
 
     // Call the startBetting function
     await doraBag.startBetting()
+    console.log("\n..................Betting has started..................\n")
 
     // Call the placeBet function from the first account - bet 2 ETH, guess 30000
-    await doraBag
-        .connect(account1)
-        .placeBet(30000, { value: ethers.utils.parseEther("2") })
+    await placeBet("1", account1, "30000", "2", doraBag, DoraTokenAddress)
 
     // Call the placeBet function from the second account - bet 2 ETH, guess 21000
-    await doraBag
-        .connect(account2)
-        .placeBet(21000, { value: ethers.utils.parseEther("2") })
+    await placeBet("2", account2, "21000", "2", doraBag, DoraTokenAddress)
+
     // Call the placeBet function from the third account - bet 2 ETH, guess 26000
-    await doraBag
-        .connect(account3)
-        .placeBet(26000, { value: ethers.utils.parseEther("2") })
+    await placeBet("3", account3, "26000", "2", doraBag, DoraTokenAddress)
+
     // Call the placeBet function from the fourth account - bet 2 ETH, guess 23000
-    await doraBag
-        .connect(account4)
-        .placeBet(23000, { value: ethers.utils.parseEther("2") })
+    await placeBet("4", account4, "23000", "2", doraBag, DoraTokenAddress)
 
     // Call the withdraw function from the second account - withdraw all
-    await doraBag.connect(account2).withdrawFunds(ethers.utils.parseEther("2"))
+    await withdraw("2", account2, "2", doraBag, DoraTokenAddress)
 
     // Call the placeBet function from the fifth account - bet 2 ETH, guess 25000
-    await doraBag
-        .connect(account5)
-        .placeBet(25000, { value: ethers.utils.parseEther("2") })
+    await placeBet("5", account5, "25000", "2", doraBag, DoraTokenAddress)
 
     // Call the withdraw function from the third account - withdraw 1.5 ETH
-    await doraBag
-        .connect(account3)
-        .withdrawFunds(ethers.utils.parseEther("1.5"))
+    await withdraw("3", account3, "1.5", doraBag, DoraTokenAddress)
+
+    // Call the withdraw function from the fourth account - withdraw 0.1 ETH
+    await withdraw("4", account4, "0.1", doraBag, DoraTokenAddress)
 
     // Call the stopBetting function after 20 seconds have passed
-    await hre.network.provider.send("evm_increaseTime", [20])
+    await network.provider.send("evm_increaseTime", [20])
     await doraBag.stopBetting()
+    console.log("\n..................Betting has stopped..................\n")
 
     const doraBagETHBalanceAfter = await ethers.provider.getBalance(
         doraBag.address
     )
-    console.log(
-        "ETH Balance of DoraBag after betting has stopped",
-        ethers.utils.formatEther(doraBagETHBalanceAfter)
-    )
-
-    const deployerETHBalance = await ethers.provider.getBalance(
-        deployer.address
-    )
-    console.log(
-        "ETH Balance of deployer",
-        ethers.utils.formatEther(deployerETHBalance)
-    )
-    const doraAddress = doraBag.getDoraTokenAddress()
-
-    await getBalance(doraAddress, account1.address, "1")
-    await getBalance(doraAddress, account2.address, "2")
-    await getBalance(doraAddress, account3.address, "3")
-    await getBalance(doraAddress, account4.address, "4")
-    await getBalance(doraAddress, account5.address, "5")
+    console.log({
+        DoraBagBalance: ethers.utils.formatEther(doraBagETHBalanceAfter),
+    })
 
     // Call the findWinner function after 20 seconds have passed, log the winner
-    await hre.network.provider.send("evm_increaseTime", [20])
-    const winner = await doraBag.findWinner()
+    await network.provider.send("evm_increaseTime", [20])
 
+    const bitcoinPrice = await doraBag.getBitcoinPrice()
+    console.log({ BitcoinPrice: ethers.utils.formatUnits(bitcoinPrice, 8) })
+    console.log("Bet closest to the price wins!")
 
-    await getBalance(doraAddress, account1.address, "1")
-    await getBalance(doraAddress, account2.address, "2")
-    await getBalance(doraAddress, account3.address, "3")
-    await getBalance(doraAddress, account4.address, "4")
-    await getBalance(doraAddress, account5.address, "5")
+    await doraBag.findWinner()
+    console.log("\n..................Winner has been found..................\n")
+
+    await getBalance(DoraTokenAddress, account1.address, "1")
+    await getBalance(DoraTokenAddress, account2.address, "2")
+    await getBalance(DoraTokenAddress, account3.address, "3")
+    await getBalance(DoraTokenAddress, account4.address, "4")
+    await getBalance(DoraTokenAddress, account5.address, "5")
 }
 
 async function getBalance(tokenAddress, accountAddress, name) {
-    // // ERC20 token contract address
-    // const tokenAddress = "<TOKEN_ADDRESS>";
-
-    // // Address to check the balance for
-    // const accountAddress = "<ACCOUNT_ADDRESS>";
-
     // Get the provider and signer from Hardhat
-    const [sender] = await hre.ethers.getSigners()
+    const [sender] = await ethers.getSigners()
 
     // Get the ERC20 token contract instance
-    const Token = await hre.ethers.getContractAt("IERC20", tokenAddress, sender)
+    const Token = await ethers.getContractAt("IERC20", tokenAddress, sender)
 
     // Call the balanceOf function
     const balance = await Token.balanceOf(accountAddress)
-    console.log(`${name} has ${balance} DoraToken`)
-    return balance.toString()
+    const parsedBalance = ethers.utils.formatEther(balance)
+    console.log(`Account${name} has ${parsedBalance} DoraToken`)
+    return parsedBalance
+}
+
+async function placeBet(
+    name,
+    signer,
+    guessPrice,
+    betAmount,
+    doraBag,
+    doraTokenAddress
+) {
+    await doraBag.connect(signer).placeBet(guessPrice, {
+        value: ethers.utils.parseEther(betAmount),
+    })
+    console.log(
+        `Account${name} has placed a bet of ${betAmount} ETH with guess ${guessPrice} USD`
+    )
+    await getBalance(doraTokenAddress, signer.address, name)
+    console.log("\n")
+}
+
+async function withdraw(name, account, amount, doraBag, doraTokenAddress) {
+    await doraBag
+        .connect(account)
+        .withdrawFunds(ethers.utils.parseEther(amount))
+    console.log(`Account${name} has withdrawn ${amount} ETH`)
+    const balance = await getBalance(doraTokenAddress, account.address, name)
+    if (+balance < 1) {
+        console.log(
+            `Account${name} has less than 1 DoraToken, so they are out of the game`
+        )
+    }
+    console.log("\n")
 }
 
 // Run the deployment script
