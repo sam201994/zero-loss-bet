@@ -1,121 +1,65 @@
-const {
-    time,
-    loadFixture,
-} = require("@nomicfoundation/hardhat-network-helpers")
-const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs")
+const { ethers, network } = require("hardhat")
 const { expect } = require("chai")
 
-describe("DoraBag Contract", function () {
-    let DoraBag
-    let doraBag
+const BTC_USD_FEED_ADDRESS = "0xA39434A63A52E749F02807ae27335515BA4b07F7"
+const LENDING_POOL_PROVIDER_ADDRESS =
+    "0x5E52dEc931FFb32f609681B8438A51c675cc232d"
+const AAVE_V2_ADDRESS = "0x3bd3a20Ac9Ff1dda1D99C0dFCE6D65C4960B3627"
+const AAVE_ATOKEN_ADDRESS = "0x22404B0e2a7067068AcdaDd8f9D586F834cCe2c5"
 
+describe("DoraBag", function () {
     let deployer
-    let bob
-    let alice
+    let account1
+    let account2
+    let account3
+    let account4
+    let account5
+
+    let doraBag
+    let doraToken
 
     beforeEach(async function () {
-        ;[deployer, bob, alice] = await ethers.getSigners()
-        DoraBag = await ethers.getContractFactory("DoraBag")
-        doraBag = await DoraBag.deploy()
+        // Retrieve the accounts
+        ;[deployer, account1, account2, account3, account4, account5] =
+            await ethers.getSigners()
+
+        // Compile the contract
+        const DoraBag = await ethers.getContractFactory("DoraBag")
+
+        // Deploy the contract
+        doraBag = await DoraBag.deploy(
+            BTC_USD_FEED_ADDRESS,
+            LENDING_POOL_PROVIDER_ADDRESS,
+            AAVE_V2_ADDRESS,
+            AAVE_ATOKEN_ADDRESS
+        )
+
         await doraBag.deployed()
-    })
 
-    describe("func stopBet", function () {
-        it("Only owner can stop the bet", async function () {
-            await expect(doraBag.connect(bob).stopBet()).to.be.revertedWith(
-                "Ownable: caller is not the owner"
-            )
-        })
+        // Get the address of the DoraToken contract
+        const DoraTokenAddress = await doraBag.getDoraTokenAddress()
 
-        it("Bet can only be stopped for an ongoing round", async function () {
-            await expect(doraBag.stopBet()).to.be.revertedWith(
-                "Betting is open"
-            )
-        })
-
-        it("Bet cannot be stopped before betting period is over (7 days)", async function () {
-            await time.increase(BETTING_PERIOD - 1) // Increase time to less than 7 days
-            await expect(doraBag.stopBet()).to.be.revertedWith(
-                "Betting can't be stopped before 7 days"
-            )
+        // Send 5 ETH to the contract for mocking interest, to be distributed to the winner (TODO: get this from Aave)
+        await deployer.sendTransaction({
+            to: ethers.utils.getAddress(doraBag.address),
+            value: ethers.utils.parseEther("5"),
         })
     })
 
-    describe("func startBet", function () {
-        it("Only owner can start a bet", async function () {
+    describe("startBetting", function () {
+        // only owner can start betting
+        it("should revert if not owner", async function () {
             await expect(
-                doraBag.connect(bob).startBettingRound()
+                doraBag.connect(account1).startBetting()
             ).to.be.revertedWith("Ownable: caller is not the owner")
         })
 
-        it("Bet can only be started if there is no current round ongoing", async function () {
-            await doraBag.startBettingRound()
-            await expect(doraBag.startBettingRound()).to.be.revertedWith(
-                "Betting is open"
+        // it should revert if betting has already started
+        it("should revert if betting has already started", async function () {
+            await doraBag.startBetting()
+            await expect(doraBag.startBetting()).to.be.revertedWith(
+                "Previous betting round is open"
             )
-        })
-
-        it("Current round number should increase", async function () {
-            await doraBag.startBettingRound()
-            const currentRound = await doraBag.currentround()
-            expect(currentRound).to.equal(1)
         })
     })
-
-    describe("func withdrawFunds", function () {
-        it("It should call approve function of AAVE aToken", async function () {
-            const amount = ethers.utils.parseEther("1")
-            await expect(doraBag.withdrawFunds(amount)).to.emit(
-                doraBag.iAToken,
-                "Approval"
-            )
-        })
-
-        it("It should call withdrawETH function of AAVE V2 contract", async function () {
-            const amount = ethers.utils.parseEther("1")
-            await expect(doraBag.withdrawFunds(amount))
-                .to.emit(doraBag.iAaveV2, "WithdrawETH")
-                .withArgs(doraBag.LENDING_POOL_ADDRESS, amount, doraBag.address)
-        })
-
-        it("DoraToken of the caller should burn", async function () {
-            const amount = ethers.utils.parseEther("1")
-            const initialBalance = await doraBag.iDoraToken.balanceOf(
-                deployer.address
-            )
-
-            await expect(doraBag.withdrawFunds(amount))
-                .to.emit(doraBag.iDoraToken, "Transfer")
-                .withArgs(
-                    deployer.address,
-                    ethers.constants.AddressZero,
-                    amount
-                )
-
-            const finalBalance = await doraBag.iDoraToken.balanceOf(
-                deployer.address
-            )
-            expect(finalBalance).to.equal(initialBalance.sub(amount))
-        })
-
-        it("Caller of the function should receive equivalent ether", async function () {
-            const amount = ethers.utils.parseEther("1")
-            const initialBalance = await deployer.getBalance()
-
-            await expect(doraBag.withdrawFunds(amount)).to.changeEtherBalance(
-                deployer,
-                amount
-            )
-
-            const finalBalance = await deployer.getBalance()
-            expect(finalBalance).to.equal(initialBalance.add(amount))
-        })
-    })
-
-    //  describe("func getBitcoinPrice", function () {
-    //   it("it should get the current bitcoin price in USD", async function () {
-    //     const price = await doraBag.getBitcoinPrice();
-    //     expect(price).to.be.a("number");
-    //   });
-    // });
 })

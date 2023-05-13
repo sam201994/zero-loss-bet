@@ -146,9 +146,17 @@ contract DoraBag is Ownable {
     }
 
     /**
+     * @dev Retrieves the current Bitcoin price in USD from the price feed.
+     * @return the latest round data from the price feed contract.
+     */
+    function getBitcoinPrice() public view returns (int256) {
+        (, int256 price, , , ) = priceFeed.latestRoundData();
+        return price;
+    }
+
+    /**
      * @dev Starts a new betting round. Only the contract owner can call this function.
      */
-
     function startBetting() external onlyOwner isCurrentRoundClosed {
         uint256 timestamp = block.timestamp;
         bettingRounds.push(
@@ -271,12 +279,19 @@ contract DoraBag is Ownable {
     }
 
     /**
-     * @dev Retrieves the current Bitcoin price in USD from the price feed.
-     * Returns the latest round data from the price feed contract.
+     * @dev Retrieves the length of the betting rounds array.
+     * @return The length of the betting rounds array.
      */
-    function getBitcoinPrice() public view returns (int256) {
-        (, int256 price, , , ) = priceFeed.latestRoundData();
-        return price;
+    function getBettingRoundsLength() external view returns (uint256) {
+        return bettingRounds.length;
+    }
+
+    /**
+     * @dev Retrieves the address of the DoraToken.
+     * @return The address of the DoraToken.
+     */
+    function getDoraTokenAddress() external view returns (address) {
+        return doraAddress;
     }
 
     /**
@@ -332,23 +347,8 @@ contract DoraBag is Ownable {
         return lendingPoolAddressesProvider.getLendingPool();
     }
 
-    function getBettingRoundsLength() public view returns (uint256) {
-        return bettingRounds.length;
-    }
-
-    function getDoraTokenAddress() external view returns (address) {
-        return doraAddress;
-    }
-
-    receive() external payable {}
     /**
-     * @dev Retrieves the total supply and the balance of the Aave aToken.
-     * Returns a tuple with the total supply and the balance of the aToken in the contract.
+     * @dev Fallback function to receive Ether.
      */
-    // TODO: check if we require to call getAave, if not required then remove this
-    // function getAave() external view returns (uint256, uint256) {
-    //     uint256 totalSupply = iAToken.totalSupply();
-    //     uint256 myBalance = iAToken.balanceOf(address(this));
-    //     return (totalSupply, myBalance);
-    // }
+    receive() external payable {}
 }
