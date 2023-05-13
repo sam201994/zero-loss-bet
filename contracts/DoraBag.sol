@@ -31,8 +31,9 @@ contract DoraBag is Ownable {
     IDoraToken private iDoraToken;
 
     // Constants
-    uint256 constant BETTING_PERIOD = 2 minutes;
-    uint256 constant LOCK_IN_PERIOD = 5 minutes;
+    uint256 constant BETTING_PERIOD = 15 seconds;
+    uint256 constant LOCK_IN_PERIOD = 15 seconds;
+    uint256 constant MIN_STAKE = 1 ether;
 
     // Addresses
     address LENDING_POOL_ADDRESS;
