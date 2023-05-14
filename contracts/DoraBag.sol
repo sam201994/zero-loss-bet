@@ -66,7 +66,7 @@ contract DoraBag is Ownable {
         _;
     }
 
-    modifier hasBettingTimeExpired() {
+    modifier hasBettingPeriodExpired() {
         require(
             block.timestamp > bettingRounds[getCurrentRoundIndex()].startTime + BETTING_PERIOD,
             "Betting can't be stopped before betting period is over"
@@ -142,7 +142,7 @@ contract DoraBag is Ownable {
      * @dev Stops the current betting round. Only the contract owner can call this function.
      * Betting can only be stopped after the betting period has expired.
      */
-    function stopBetting() external onlyOwner isCurrentRoundOpen hasBettingTimeExpired {
+    function stopBetting() external onlyOwner isCurrentRoundOpen hasBettingPeriodExpired {
         bettingRounds[getCurrentRoundIndex()].isOpen = false;
         emit BettingRoundClosed(bettingRounds.length);
     }
