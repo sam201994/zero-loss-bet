@@ -88,11 +88,11 @@ The DoraBag contract relies on the following Solidity libraries and contracts:
 
 1. [Chainlink](https://docs.chain.link/data-feeds/price-feeds): The contract uses the Chainlink `AggregatorV3Interface` to fetch the latest price of Bitcoin in USD.
 
-2. OpenZeppelin: The contract imports various libraries and contracts from the OpenZeppelin library, including
+2. [OpenZeppelin](https://docs.openzeppelin.com/): The contract imports various libraries and contracts from the OpenZeppelin library, including
 
--   `Ownable` for ownership functionality
--   `SafeMath` for safe arithmetic operations
--   `IERC20` for interacting with ERC20 tokens.
+	-   `Ownable` for ownership functionality
+	-   `SafeMath` for safe arithmetic operations
+	-   `IERC20` for interacting with ERC20 tokens.
 
 3. [Aave V2](https://docs.aave.com/developers/v/2.0/the-core-protocol/weth-gateway): The contract integrates with the Aave V2 lending protocol to deposit and withdraw ETH. It uses the IAaveV2 interface to interact with the Aave protocol.
     - `IAaveV2`, `IDoraToken`, `ILendingPoolAddressesProvider`
