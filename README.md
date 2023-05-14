@@ -68,13 +68,13 @@ The contract deploys a DoraToken instance upon deployment.
 
 ## Set up
 
-This deploy scripts deploys on Goerli forked network and simulates basic path.
+The hardhat config is set up to deploy it on Goerli or Goerli fork. 
 
 ```
 $npm install
 $npx hardhat compile // to complie
 $npx hardhat test // to test
-$npx hardhat run --network hardhat scripts/deploy.js // deploys on Goerli fork
+$npx hardhat run --network hardhat scripts/deploy.js 
 ```
 
 ## Contract Details

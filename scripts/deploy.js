@@ -1,10 +1,8 @@
-const { ethers, network } = require("hardhat");
+const { ethers, network, hardhat } = require("hardhat");
 
 async function main() {
-    const BTC_USD_FEED_ADDRESS = "0xA39434A63A52E749F02807ae27335515BA4b07F7";
-    const LENDING_POOL_PROVIDER_ADDRESS = "0x5E52dEc931FFb32f609681B8438A51c675cc232d";
-    const AAVE_V2_ADDRESS = "0x3bd3a20Ac9Ff1dda1D99C0dFCE6D65C4960B3627";
-    const AAVE_ATOKEN_ADDRESS = "0x22404B0e2a7067068AcdaDd8f9D586F834cCe2c5";
+    const { BTC_USD_FEED_ADDRESS, LENDING_POOL_PROVIDER_ADDRESS, AAVE_V2_ADDRESS, AAVE_ATOKEN_ADDRESS } =
+        network.config.constants;
 
     // Retrieve the accounts
     const [deployer, account1, account2, account3, account4, account5] = await ethers.getSigners();
