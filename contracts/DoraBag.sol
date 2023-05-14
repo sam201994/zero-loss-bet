@@ -191,7 +191,6 @@ contract DoraBag is Ownable {
     /**
      * @dev Places a bet in the current betting round.
      * The user provides the guessed Bitcoin price in USD and sends the corresponding amount of Ether as the bet amount.
-     * Only one bet is allowed per user.
      * The bet amount is deposited into the Aave V2 lending pool and the caller receives equivalent DoraTokens.
      * Emits a BetPlaced event.
      * @param _bitcoinGuesspriceInUSD The guessed Bitcoin price in USD.
@@ -255,7 +254,6 @@ contract DoraBag is Ownable {
     /**
      * @dev Mints the specified amount of DoraTokens to the given recipient.
      * Calls the mint function of the DoraToken contract to mint new tokens.
-     * Emits a Transfer event.
      * @param _recipient The recipient of the minted DoraTokens.
      * @param _amount The amount of DoraTokens to mint.
      */
@@ -265,8 +263,8 @@ contract DoraBag is Ownable {
     }
 
     /**
-     * @dev Checks if the balance of the given account is sufficient to participate in the betting.
-     * Returns true if the balance is greater than 1 Ether, false otherwise.
+     * @dev Checks if the DoraToken balance of the given account is sufficient to participate in the betting.
+     * Returns true if the balance is greater than MIN_STAKE Ether, false otherwise.
      * @param account The account to check the balance for.
      * @return A boolean indicating if the balance is sufficient.
      */
