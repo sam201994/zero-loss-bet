@@ -19,7 +19,6 @@ import "./DoraToken.sol";
  * The contract uses Aave V2 for lending and borrowing functionality and a custom DoraToken for tracking user balances.
  * The contract is owned by an owner who can start and stop betting rounds and announce winners.
  */
-
 contract DoraBag is Ownable {
     using SafeMath for uint256;
 
@@ -70,7 +69,7 @@ contract DoraBag is Ownable {
     modifier hasBettingTimeExpired() {
         require(
             block.timestamp > bettingRounds[getCurrentRoundIndex()].startTime + BETTING_PERIOD,
-            "Betting can't be stopped before 7 days"
+            "Betting can't be stopped before betting period is over"
         );
         _;
     }
@@ -109,11 +108,6 @@ contract DoraBag is Ownable {
         address _AAVE_V2_ADDRESS,
         address _AAVE_ATOKEN_ADDRESS
     ) {
-        // address _BTC_USD_FEED_ADDRESS = address(0xA39434A63A52E749F02807ae27335515BA4b07F7);
-        // address _LENDING_POOL_PROVIDER_ADDRESS = address(0x5E52dEc931FFb32f609681B8438A51c675cc232d);
-        // address _AAVE_V2_ADDRESS = address(0x3bd3a20Ac9Ff1dda1D99C0dFCE6D65C4960B3627);
-        // address _AAVE_ATOKEN_ADDRESS = address(0x22404B0e2a7067068AcdaDd8f9D586F834cCe2c5);
-
         DoraToken doraToken = new DoraToken();
         doraAddress = address(doraToken);
         iDoraToken = IDoraToken(doraAddress);
@@ -141,7 +135,7 @@ contract DoraBag is Ownable {
     function startBetting() external onlyOwner isCurrentRoundClosed {
         uint256 timestamp = block.timestamp;
         bettingRounds.push(BettingRound(bettingRounds.length + 1, address(0), true, timestamp));
-        emit BettingRoundStarted(bettingRounds.length + 1, timestamp);
+        emit BettingRoundStarted(bettingRounds.length, timestamp);
     }
 
     /**
@@ -159,17 +153,17 @@ contract DoraBag is Ownable {
      * The winner receives the interest earned from the Aave V2 lending pool.
      * This function can only be called after the lock-in period has expired.
      */
-    function findWinner() external isBettingRoundEmpty isLockInPeriodOver {
+    function findWinner() external isBettingRoundEmpty isCurrentRoundClosed isLockInPeriodOver {
         require(users.length > 0, "There are no users");
         uint256 target = uint256(getBitcoinPrice()) / 10 ** 8;
         uint256 closestNumber;
         address closestUser;
         uint256 minDifference = absDiff(bets[users[0]], target);
 
-        for (uint256 i = 1; i < users.length; i++) {
+        for (uint256 i = 0; i < users.length; i++) {
             if (isSufficientBalance(users[i])) {
                 uint256 difference = absDiff(bets[users[i]], target);
-                if (difference < minDifference) {
+                if (difference <= minDifference) {
                     minDifference = difference;
                     closestNumber = bets[users[i]];
                     closestUser = users[i];
@@ -279,7 +273,7 @@ contract DoraBag is Ownable {
     function isSufficientBalance(address account) private view returns (bool) {
         IDoraToken dora = IDoraToken(doraAddress);
         uint256 balance = dora.balanceOf(account);
-        return balance > MIN_STAKE;
+        return balance >= MIN_STAKE;
     }
 
     /**
