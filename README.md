@@ -149,7 +149,6 @@ The contract provides the following functions:
 -   `findWinner()`: Finds the winner of the current betting round.
 -   `placeBet(uint256 _bitcoinGuesspriceInUSD)`: Places a bet in the current betting round.
 -   `withdrawFunds(uint256 _amount)`: Withdraws the user's funds from the Aave V2 lending pool.
--   `getBettingRoundsLength()`: Returns the total number of betting rounds.
 
 
 

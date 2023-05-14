@@ -251,14 +251,6 @@ contract DoraBag is Ownable {
     }
 
     /**
-     * @dev Retrieves the length of the betting rounds array.
-     * @return The length of the betting rounds array.
-     */
-    function getBettingRoundsLength() external view returns (uint256) {
-        return bettingRounds.length;
-    }
-
-    /**
      * @dev Retrieves the address of the DoraToken.
      * @return The address of the DoraToken.
      */
